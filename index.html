@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VELORAL | Luxury Online Shop</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Таны одоо байгаа CSS бүгд хэвээрээ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --crimson: #8B0000;
+            --deep-red: #1A0000;
+            --blood-red: #DC143C;
+            --gold: #D4AF37;
+            --gold-light: #F4E4C1;
+            --black: #050505;
+            --dark-gray: #0A0A0A;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--black);
+            color: #fff;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        /* ====== НЭМЭЛТ: Loading & Status Styles ====== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--black);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .loading-text {
+            color: var(--gold);
+            font-size: 1rem;
+            letter-spacing: 2px;
+        }
+
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--gold);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--gold);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .sync-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .sync-indicator.syncing {
+            background: #F59E0B;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ====== Таны бусад CSS-үүд ====== */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--blood-red) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: all 0.3s;
+            padding: 10px;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(212, 175, 55, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .nav-icon:hover {
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.15);
+            transform: scale(1.1);
+        }
+
+        .nav-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--blood-red);
+            color: #fff;
+            font-size: 0.65rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            border: 2px solid var(--black);
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            margin-top: 70px;
+            padding-top: 80px;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(139, 0, 0, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(212, 175, 55, 0.15) 0%, transparent 40%),
+                radial-gradient(ellipse at center, var(--deep-red) 0%, var(--black) 60%);
+            padding-bottom: 80px;
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 10;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+            border-radius: 20px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 10vw, 5rem);
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fff 0%, var(--gold) 50%, var(--blood-red) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 5px;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: 1rem;
+            color: var(--gold);
+            font-weight: 400;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin-bottom: 60px;
+            opacity: 0.8;
+        }
+
+        .shop-info-container {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .shop-info-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 50px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .shop-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .shop-info-item a {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        .info-btn {
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            color: var(--gold);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 5px;
+        }
+
+        .info-btn:hover {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        .info-btn.copied {
+            background: #10B981;
+            border-color: #10B981;
+            color: #fff;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            color: var(--gold);
+            animation: bounce 2s infinite;
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .scroll-indicator span {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .scroll-indicator .arrow {
+            font-size: 1.2rem;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        .how-to-use {
+            padding: 40px 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .guide-container {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(0, 0, 0, 0.3));
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .guide-title {
+            color: var(--gold);
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .guide-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .guide-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            min-width: 120px;
+            transition: all 0.3s ease;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        .guide-step:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .step-number-guide {
+            width: 28px;
+            height: 28px;
+            background: var(--gold);
+            color: var(--black);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .step-icon {
+            font-size: 1.8rem;
+        }
+
+        .guide-step p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .guide-arrow {
+            color: var(--gold);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .category-filter {
+            padding: 30px 5% 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--glass);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--blood-red), var(--deep-red));
+            border-color: var(--gold);
+            box-shadow: 0 5px 20px rgba(220, 20, 60, 0.3);
+        }
+
+        .filter-icon {
+            font-size: 1.2rem;
+        }
+
+        .products {
+            padding: 60px 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 40px;
+            color: var(--gold-light);
+            font-weight: 600;
+            letter-spacing: 2px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .product-card {
+            background: var(--glass);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--gold);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(212, 175, 55, 0.1);
+        }
+
+        .product-image {
+            height: 320px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.08);
+        }
+
+        .price-tag {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, var(--blood-red), var(--deep-red));
+            color: var(--gold-light);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: 1px solid var(--gold);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(5px);
+        }
+
+        .glass-add-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            padding: 14px 32px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 50px;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 20;
+            white-space: nowrap;
+        }
+
+        .glass-add-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50px;
+            background: linear-gradient(135deg, rgba(220, 20, 60, 0.8), rgba(139, 0, 0, 0.8));
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+
+        .product-card:hover .glass-add-btn {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .glass-add-btn:hover {
+            transform: translateX(-50%) scale(1.05);
+            border-color: var(--gold);
+            box-shadow: 0 15px 40px rgba(220, 20, 60, 0.4);
+        }
+
+        .glass-add-btn:hover::before {
+            opacity: 1;
+        }
+
+        .glass-add-btn.added {
+            background: rgba(16, 185, 129, 0.9);
+            border-color: #10B981;
+        }
+
+        .product-info {
+            padding: 25px;
+        }
+
+        .product-name {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .no-products {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .no-products-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 1500;
+            backdrop-filter: blur(5px);
+        }
+
+        .cart-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 450px;
+            height: 100%;
+            background: var(--dark-gray);
+            border-left: 2px solid var(--gold);
+            z-index: 2000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .cart-sidebar.active {
+            right: 0;
+        }
+
+        .cart-header {
+            padding: 25px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-header h2 {
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+
+        .close-cart {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-cart:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .cart-item:hover {
+            transform: translateX(-5px);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+
+        .cart-item-image {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--deep-red), var(--black));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .cart-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cart-item-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cart-item-name {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cart-item-price {
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-btn:hover {
+            background: var(--gold);
+            color: var(--black);
+            transform: scale(1.1);
+        }
+
+        .remove-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 5px;
+        }
+
+        .remove-btn:hover {
+            color: var(--blood-red);
+        }
+
+        .cart-footer {
+            padding: 25px;
+            border-top: 2px solid var(--gold);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .cart-total-label {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .cart-total-price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--blood-red), var(--deep-red));
+            border: 2px solid var(--gold);
+            color: #fff;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .checkout-btn:hover:not(:disabled) {
+            box-shadow: 0 15px 40px rgba(220, 20, 60, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .checkout-btn:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.5;
+        }
+
+        .checkout-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2500;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .checkout-modal.active {
+            display: flex;
+        }
+
+        .checkout-content {
+            background: var(--dark-gray);
+            border-radius: 25px;
+            border: 2px solid var(--gold);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .checkout-header {
+            padding: 30px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            text-align: center;
+        }
+
+        .checkout-header h2 {
+            font-size: 1.6rem;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+
+        .checkout-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .checkout-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--gold);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: #fff;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+        }
+
+        .form-group input.error,
+        .form-group textarea.error {
+            border-color: var(--blood-red);
+            background: rgba(220, 20, 60, 0.1);
+        }
+
+        .error-message {
+            color: var(--blood-red);
+            font-size: 0.8rem;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .form-group input.error + .error-message,
+        .form-group textarea.error + .error-message {
+            display: block;
+        }
+
+        .order-summary-mini {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .order-summary-mini h4 {
+            color: var(--gold);
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--blood-red), var(--deep-red));
+            color: #fff;
+            border: 1px solid var(--gold);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 10px 30px rgba(220, 20, 60, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 50px 30px;
+        }
+
+        .success-screen.active {
+            display: block;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--gold), #10B981);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 3rem;
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.3);
+            animation: successPulse 2s infinite;
+        }
+
+        @keyframes successPulse {
+            0%, 100% { box-shadow: 0 20px 60px rgba(212, 175, 55, 0.4); }
+            50% { box-shadow: 0 20px 80px rgba(16, 185, 129, 0.5); }
+        }
+
+        .success-title {
+            font-size: 1.8rem;
+            color: var(--gold);
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .order-details {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: left;
+            margin-bottom: 30px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .order-details h4 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .detail-label {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #fff;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+        }
+
+        /* ====== НЭМЭЛТ: Admin Button ====== */
+        .admin-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, var(--gold), #B8860B);
+            border: 2px solid var(--gold-light);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.3rem;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--black);
+        }
+
+        .admin-link:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 6px 30px rgba(212, 175, 55, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .hero {
+                padding-top: 60px;
+                min-height: 90vh;
+            }
+
+            .hero h1 {
+                font-size: clamp(2rem, 10vw, 3rem);
+                letter-spacing: 3px;
+            }
+
+            .hero-subtitle {
+                font-size: 0.85rem;
+                letter-spacing: 4px;
+            }
+
+            .shop-info-row {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px 20px;
+                width: 100%;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .product-image {
+                height: 350px;
+            }
+
+            .glass-add-btn {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+                bottom: 15px;
+                padding: 12px 24px;
+                font-size: 0.85rem;
+            }
+
+            .guide-steps {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .guide-arrow {
+                transform: rotate(90deg);
+            }
+
+            .guide-step {
+                max-width: 100%;
+                flex-direction: row;
+                text-align: left;
+                padding: 12px;
+            }
+
+            .guide-step p br {
+                display: none;
+            }
+
+            .filter-container {
+                overflow-x: auto;
+                padding-bottom: 10px;
+                justify-content: flex-start;
+                -webkit-overflow-scrolling: touch;
+                flex-wrap: nowrap;
+            }
+
+            .filter-btn {
+                white-space: nowrap;
+                padding: 10px 18px;
+                font-size: 0.85rem;
+            }
+
+            .cart-sidebar {
+                max-width: 100%;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .checkout-content {
+                margin: 10px;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .sync-status {
+                bottom: 10px;
+                left: 10px;
+                font-size: 0.65rem;
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-image {
+                height: 300px;
+            }
+
+            .price-tag {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--black);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--blood-red);
+        }
+
+        ::selection {
+            background: rgba(212, 175, 55, 0.3);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">VELORAL-г ачааллаж байна...</div>
+    </div>
+
+    <!-- Sync Status Indicator -->
+    <div class="sync-status" id="syncStatus">
+        <div class="sync-indicator" id="syncIndicator"></div>
+        <span id="syncText">Холбогдсон</span>
+    </div>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <nav>
+        <div class="logo">VELORAL</div>
+        <div class="nav-right">
+            <div class="nav-icon" onclick="toggleCart()">
+                🛒
+                <span class="nav-badge" id="cartCount">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">Premium Collection</div>
+            <h1>VELORAL</h1>
+            <p class="hero-subtitle">Онлайн дэлгүүр</p>
+
+            <div class="shop-info-container">
+                <div class="shop-info-row">
+                    <div class="shop-info-item">
+                        <span class="status-dot"></span>
+                        <span>Нээлттэй</span>
+                    </div>
+                    <div class="shop-info-item">
+                        <span>📞</span>
+                        <a href="tel:+97699119911">+976 94802514</a>
+                        <button class="info-btn" onclick="copyShopPhone()" title="Хуулах">📋</button>
+                    </div>
+                    <div class="shop-info-item">
+                        <span>📍</span>
+                        <span>Натур худалдааны төв</span>
+                        <button class="info-btn" onclick="openShopMap()" title="Газрын зураг">🗺️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scroll-indicator" onclick="scrollToProducts()">
+            <span>Бараа харах</span>
+            <div class="arrow">👇</div>
+        </div>
+    </section>
+
+    <section class="how-to-use">
+        <div class="guide-container">
+            <h3 class="guide-title">🛍️ Хэрхэн захиалах вэ?</h3>
+            <div class="guide-steps">
+                <div class="guide-step">
+                    <div class="step-number-guide">1</div>
+                    <div class="step-icon">👇</div>
+                    <p>Доош гүйлгэж<br>бараа сонго</p>
+                </div>
+                <div class="guide-arrow">→</div>
+                <div class="guide-step">
+                    <div class="step-number-guide">2</div>
+                    <div class="step-icon">🛒</div>
+                    <p>"Сагсанд нэм"<br>товч дар</p>
+                </div>
+                <div class="guide-arrow">→</div>
+                <div class="guide-step">
+                    <div class="step-number-guide">3</div>
+                    <div class="step-icon">📋</div>
+                    <p>Сагс дээр дарж<br>харах</p>
+                </div>
+                <div class="guide-arrow">→</div>
+                <div class="guide-step">
+                    <div class="step-number-guide">4</div>
+                    <div class="step-icon">✅</div>
+                    <p>Хаяг бөглөж<br>захиалга өг</p>
+                </div>
+            </div>
+            <div style="margin-top: 20px; padding: 15px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3);">
+                <p style="color: var(--gold); font-size: 0.9rem; margin: 0;">
+                    💡 <strong>Санамж:</strong> Ирж авах бол <strong>утсаар</strong> холбогдож баталгаажуулна!
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="category-filter">
+        <div class="filter-container">
+            <button class="filter-btn active" onclick="filterProducts('all')" data-filter="all">
+                <span class="filter-icon">👥</span>
+                <span>Бүгд</span>
+            </button>
+            <button class="filter-btn" onclick="filterProducts('men')" data-filter="men">
+                <span class="filter-icon">👨</span>
+                <span>Эрэгтэй</span>
+            </button>
+            <button class="filter-btn" onclick="filterProducts('women')" data-filter="women">
+                <span class="filter-icon">👩</span>
+                <span>Эмэгтэй</span>
+            </button>
+        </div>
+    </section>
+
+    <section class="products">
+        <h2 class="section-title" id="productsTitle">Бүх Бараанууд</h2>
+        <div class="products-grid" id="productsGrid">
+            <!-- Бараа энд харагдана -->
+        </div>
+        <div class="no-products" id="noProducts" style="display: none;">
+            <div class="no-products-icon">🔍</div>
+            <p>Энэ ангилалд бараа олдсонгүй</p>
+        </div>
+    </section>
+
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h2>Таны Сагс</h2>
+            <button class="close-cart" onclick="toggleCart()">✕</button>
+        </div>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span class="cart-total-label">Нийт:</span>
+                <span class="cart-total-price" id="cartTotal">₮0</span>
+            </div>
+            <button class="checkout-btn" onclick="openCheckout()" id="checkoutBtn" disabled>
+                Захиалга өгөх →
+            </button>
+        </div>
+    </div>
+
+    <div class="checkout-modal" id="checkoutModal">
+        <div class="checkout-content">
+            <div id="checkoutForm">
+                <div class="checkout-header">
+                    <h2>🚀 Шууд Захиалга</h2>
+                    <p class="checkout-subtitle">Мэдээллээ бөглөж захиалаарай</p>
+                </div>
+                <div class="checkout-body">
+                    <div class="form-group">
+                        <label>Нэр *</label>
+                        <input type="text" id="customerName" placeholder="Бат Эрдэнэ" onblur="validateField(this)">
+                        <span class="error-message">Нэр оруулна уу</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Утасны дугаар *</label>
+                        <input type="tel" id="customerPhone" placeholder="99119911" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onblur="validateField(this)">
+                        <span class="error-message">8 оронтой утасны дугаар оруулна уу</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Хүргэлтийн хаяг *</label>
+                        <textarea id="customerAddress" rows="3" placeholder="Улаанбаатар, Сүхбаатар дүүрэг..." onblur="validateField(this)"></textarea>
+                        <span class="error-message">Хаяг оруулна уу</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Нэмэлт тайлбар</label>
+                        <textarea id="customerNote" rows="2" placeholder="Хүргэлтийн цаг, нэмэлт мэдээлэл..."></textarea>
+                    </div>
+
+                    <div class="order-summary-mini">
+                        <h4>🛒 Захиалгын дүн</h4>
+                        <div id="orderSummaryItems"></div>
+                        <div class="summary-total">
+                            <span>Нийт:</span>
+                            <span id="orderSummaryTotal">₮0</span>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="closeCheckout()">Буцах</button>
+                        <button class="btn btn-primary" onclick="submitOrder()" id="submitOrderBtn">
+                            Захиалга өгөх ✓
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-screen" id="successScreen">
+                <div class="success-icon">✓</div>
+                <h2 class="success-title">Захиалга Амжилттай!</h2>
+                <p class="success-message">
+                    Таны захиалга бүртгэгдлээ.<br>
+                    Бид тантай удахгүй холбогдох болно.
+                </p>
+                
+                <div class="order-details">
+                    <h4>Захиалгын мэдээлэл</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Захиалгын дугаар:</span>
+                        <span class="detail-value" id="finalOrderId">#ORDER-XXXXXX</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Нийт дүн:</span>
+                        <span class="detail-value" id="finalTotal">₮0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Утас:</span>
+                        <span class="detail-value" id="finalPhone">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Хаяг:</span>
+                        <span class="detail-value" id="finalAddress">-</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="finishOrder()" style="width: 100%;">
+                    Дэлгүүр рүү буцах
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Link -->
+    <a href="admin.html" class="admin-link" title="Админ хэсэг">🔐</a>
+
+    <script>
+        // ==========================================
+        // 🌐 GOOGLE SHEETS API CONFIGURATION
+        // ==========================================
+        // ⚠️ ЭНД ӨӨРИЙН GOOGLE APPS SCRIPT URL-г ОРУУЛНА УУ!
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzTCfDLZUl-WqtdIm4LXeOSSAhu8viAJEs9OUndxaZxoLsX1nyjEnQr6TO2Xingb9a1Dw/exec';
+        
+        // ==========================================
+        // 🎨 THREE.JS BACKGROUND (Хэвээрээ)
+        // ==========================================
+        let scene, camera, renderer, particles;
+        
+        function initThreeJS() {
+            const canvas = document.getElementById('bg-canvas');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 50;
+
+            renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            const geometry = new THREE.BufferGeometry();
+            const count = 800;
+            const positions = new Float32Array(count * 3);
+            const colors = new Float32Array(count * 3);
+
+            for(let i = 0; i < count * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 100;
+                positions[i+1] = (Math.random() - 0.5) * 100;
+                positions[i+2] = (Math.random() - 0.5) * 100;
+                
+                const isGold = Math.random() > 0.6;
+                colors[i] = isGold ? 0.83 : 0.55;
+                colors[i+1] = isGold ? 0.69 : 0.0;
+                colors[i+2] = isGold ? 0.22 : 0.0;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.15,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            let mouseX = 0, mouseY = 0;
+            let isTouch = window.matchMedia("(pointer: coarse)").matches;
+            
+            if (!isTouch) {
+                document.addEventListener('mousemove', (e) => {
+                    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+                    mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+                });
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                particles.rotation.x += 0.0003;
+                particles.rotation.y += 0.0005;
+                
+                if (!isTouch) {
+                    particles.rotation.x += mouseY * 0.0003;
+                    particles.rotation.y += mouseX * 0.0003;
+                }
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // ==========================================
+        // 📊 DATA & STATE
+        // ==========================================
+        let products = [];
+        let currentFilter = 'all';
+        let cart = [];
+        let lastSyncTime = Date.now();
+
+        // ==========================================
+        // 🔄 REAL-TIME SYNC FUNCTIONS
+        // ==========================================
+        
+        // Бараа татаж авах
+        async function fetchProducts() {
+            updateSyncStatus('syncing', 'Бараа татаж байна...');
+            
+            try {
+                const response = await fetch(`${API_URL}?action=getProducts&t=${Date.now()}`);
+                const data = await response.json();
+                
+                if (data.success && data.products) {
+                    products = data.products;
+                    renderProducts();
+                    updateSyncStatus('online', 'Сүүлийн шинэчлэл: ' + new Date().toLocaleTimeString('mn-MN'));
+                    lastSyncTime = Date.now();
+                    
+                    // LocalStorage-д backup хийх
+                    localStorage.setItem('veloral_products_backup', JSON.stringify(products));
+                } else {
+                    throw new Error(data.error || 'Мэдээлэл олдсонгүй');
+                }
+            } catch (error) {
+                console.error('Бараа татахад алдаа:', error);
+                updateSyncStatus('offline', 'Оффлайн режим');
+                
+                // Backup-аас ачаалах
+                const backup = localStorage.getItem('veloral_products_backup');
+                if (backup) {
+                    products = JSON.parse(backup);
+                    renderProducts();
+                }
+            }
+        }
+
+        // Захиалга илгээх
+        async function submitOrderToSheets(order) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addOrder',
+                        order: order
+                    })
+                });
+                
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('Захиалга илгээхэд алдаа:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Sync статус харуулах
+        function updateSyncStatus(status, text) {
+            const indicator = document.getElementById('syncIndicator');
+            const syncText = document.getElementById('syncText');
+            
+            if (status === 'syncing') {
+                indicator.classList.add('syncing');
+            } else {
+                indicator.classList.remove('syncing');
+            }
+            
+            syncText.textContent = text;
+        }
+
+        // Авто шинэчлэл (5 секунд тутам)
+        function startAutoRefresh() {
+            // Эхлээд нэг удаа татаж ав
+            fetchProducts();
+            
+            // Дараа нь 5 секунд тутам шинэчлэх
+            setInterval(() => {
+                fetchProducts();
+            }, 5000);
+        }
+
+        // ==========================================
+        // 🚀 INITIALIZATION
+        // ==========================================
+        window.onload = async () => {
+            initThreeJS();
+            
+            // Loading харуулах
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 1000);
+            
+            // Real-time sync эхлүүлэх
+            startAutoRefresh();
+            
+            // Cart-ыг localStorage-аас сэргээх
+            const savedCart = localStorage.getItem('veloral_cart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+                updateCart();
+            }
+        };
+
+        // ==========================================
+        // 🛍️ PRODUCT FUNCTIONS (Siteжруулсан)
+        // ==========================================
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            const noProducts = document.getElementById('noProducts');
+
+            let filteredProducts = products;
+            if (currentFilter !== 'all') {
+                filteredProducts = products.filter(p => p.category === currentFilter);
+            }
+
+            if (filteredProducts.length === 0) {
+                grid.innerHTML = '';
+                noProducts.style.display = 'block';
+                return;
+            }
+
+            noProducts.style.display = 'none';
+            grid.innerHTML = filteredProducts.map(p => `
+                <div class="product-card" data-category="${p.category}" data-id="${p.id}">
+                    <div class="product-image">
+                        <div class="price-tag">₮${parseInt(p.price).toLocaleString()}</div>
+                        <img src="${p.image}" alt="${p.name}" loading="lazy" 
+                             onerror="this.src='https://via.placeholder.com/400x400/1a0000/d4af37?text=VELORAL'">
+                        <button class="glass-add-btn" onclick="addToCart(${p.id}, this)">
+                            <span>🛒</span>
+                            <span>Сагсанд нэмэх</span>
+                        </button>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">₮${parseInt(p.price).toLocaleString()}</div>
+                        ${p.description ? `<div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 5px;">${p.description}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProducts(category) {
+            currentFilter = category;
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === category) {
+                    btn.classList.add('active');
+                }
+            });
+
+            const titles = {
+                'all': 'Бүх Бараанууд',
+                'men': 'Эрэгтэй Бараанууд',
+                'women': 'Эмэгтэй Бараанууд'
+            };
+            document.getElementById('productsTitle').textContent = titles[category];
+
+            renderProducts();
+            document.getElementById('productsTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function scrollToProducts() {
+            document.getElementById('productsTitle').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ==========================================
+        // 🛒 CART FUNCTIONS (Siteжруулсан)
+        // ==========================================
+        function addToCart(id, btnElement) {
+            const product = products.find(p => p.id == id);
+            if (!product) return;
+            
+            const existing = cart.find(i => i.id == id);
+            
+            if (existing) {
+                existing.quantity++;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            
+            // LocalStorage-д хадгалах
+            localStorage.setItem('veloral_cart', JSON.stringify(cart));
+            
+            updateCart();
+            
+            if (btnElement) {
+                const originalHTML = btnElement.innerHTML;
+                btnElement.classList.add('added');
+                btnElement.innerHTML = '<span>✓</span><span>Нэмэгдлээ</span>';
+                
+                const floatEl = document.createElement('div');
+                floatEl.textContent = '+1';
+                floatEl.style.cssText = `
+                    position: fixed;
+                    color: var(--gold);
+                    font-weight: bold;
+                    font-size: 1.5rem;
+                    pointer-events: none;
+                    z-index: 9999;
+                    left: ${btnElement.getBoundingClientRect().left + btnElement.offsetWidth/2}px;
+                    top: ${btnElement.getBoundingClientRect().top}px;
+                `;
+                document.body.appendChild(floatEl);
+                
+                floatEl.animate([
+                    { transform: 'translateY(0) scale(1)', opacity: 1 },
+                    { transform: 'translateY(-50px) scale(1.5)', opacity: 0 }
+                ], {
+                    duration: 800,
+                    easing: 'ease-out'
+                }).onfinish = () => floatEl.remove();
+                
+                setTimeout(() => {
+                    btnElement.classList.remove('added');
+                    btnElement.innerHTML = originalHTML;
+                }, 1500);
+            }
+        }
+
+        function updateCart() {
+            const items = document.getElementById('cartItems');
+            const count = document.getElementById('cartCount');
+            const total = document.getElementById('cartTotal');
+            const btn = document.getElementById('checkoutBtn');
+            
+            const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
+            count.textContent = totalItems;
+            
+            if (totalItems > 0) {
+                count.style.transform = 'scale(1.3)';
+                setTimeout(() => count.style.transform = 'scale(1)', 200);
+            }
+            
+            if (cart.length === 0) {
+                items.innerHTML = `
+                    <div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,0.5);">
+                        <div style="font-size:4rem;margin-bottom:20px;">🛒</div>
+                        <p>Сагс хоосон байна</p>
+                        <p style="font-size:0.85rem;margin-top:10px;">Бараа сонгоод эхлээрэй</p>
+                    </div>`;
+                total.textContent = '₮0';
+                btn.disabled = true;
+                return;
+            }
+            
+            btn.disabled = false;
+            items.innerHTML = cart.map(i => `
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        <img src="${i.image}" alt="${i.name}" loading="lazy">
+                    </div>
+                    <div class="cart-item-details">
+                        <div class="cart-item-name">${i.name}</div>
+                        <div class="cart-item-price">₮${parseInt(i.price).toLocaleString()}</div>
+                        <div class="quantity-control">
+                            <button class="qty-btn" onclick="updateQty(${i.id}, -1)">−</button>
+                            <span>${i.quantity}</span>
+                            <button class="qty-btn" onclick="updateQty(${i.id}, 1)">+</button>
+                            <button class="remove-btn" onclick="removeItem(${i.id})">Устгах</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            const sum = cart.reduce((s, i) => s + (parseInt(i.price) * i.quantity), 0);
+            total.textContent = '₮' + sum.toLocaleString();
+        }
+
+        function updateQty(id, change) {
+            const item = cart.find(i => i.id == id);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) removeItem(id);
+                else {
+                    localStorage.setItem('veloral_cart', JSON.stringify(cart));
+                    updateCart();
+                }
+            }
+        }
+
+        function removeItem(id) {
+            cart = cart.filter(i => i.id != id);
+            localStorage.setItem('veloral_cart', JSON.stringify(cart));
+            updateCart();
+        }
+
+        function toggleCart() {
+            document.getElementById('cartSidebar').classList.toggle('active');
+            document.getElementById('cartOverlay').classList.toggle('active');
+            document.body.style.overflow = document.getElementById('cartSidebar').classList.contains('active') ? 'hidden' : '';
+        }
+
+        // ==========================================
+        // 💳 CHECKOUT FUNCTIONS (Siteжруулсан)
+        // ==========================================
+        function openCheckout() {
+            if (cart.length === 0) return;
+            
+            const summaryItems = document.getElementById('orderSummaryItems');
+            const summaryTotal = document.getElementById('orderSummaryTotal');
+            
+            summaryItems.innerHTML = cart.map(i => `
+                <div class="summary-item">
+                    <span>${i.name} x${i.quantity}</span>
+                    <span>₮${(parseInt(i.price) * i.quantity).toLocaleString()}</span>
+                </div>
+            `).join('');
+            
+            const total = cart.reduce((s, i) => s + (parseInt(i.price) * i.quantity), 0);
+            summaryTotal.textContent = '₮' + total.toLocaleString();
+            
+            document.getElementById('checkoutModal').classList.add('active');
+            toggleCart();
+            document.body.style.overflow = 'hidden';
+        }
+
+        function validateField(input) {
+            const val = input.value.trim();
+            let isValid = true;
+            
+            if (!val) {
+                isValid = false;
+            } else if (input.id === 'customerPhone') {
+                isValid = val.length === 8 && /^\d+$/.test(val);
+            }
+            
+            if (!isValid) {
+                input.classList.add('error');
+                return false;
+            }
+            input.classList.remove('error');
+            return true;
+        }
+
+        async function submitOrder() {
+            const name = document.getElementById('customerName');
+            const phone = document.getElementById('customerPhone');
+            const addr = document.getElementById('customerAddress');
+            
+            if (!validateField(name) || !validateField(phone) || !validateField(addr)) {
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitOrderBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Илгээж байна...';
+            
+            const orderId = 'ORD-' + Date.now().toString(36).toUpperCase();
+            const total = cart.reduce((s, i) => s + (parseInt(i.price) * i.quantity), 0);
+            const items = cart.map(i => `${i.name} x${i.quantity}`).join(', ');
+            
+            const order = {
+                order_id: orderId,
+                customer_name: name.value.trim(),
+                phone: phone.value.trim(),
+                address: addr.value.trim(),
+                items: items,
+                total: total,
+                status: 'pending',
+                note: document.getElementById('customerNote').value.trim()
+            };
+            
+            // Google Sheets рүү илгээх
+            const result = await submitOrderToSheets(order);
+            
+            if (result.success) {
+                // Success screen
+                document.getElementById('checkoutForm').style.display = 'none';
+                document.getElementById('successScreen').classList.add('active');
+                
+                document.getElementById('finalOrderId').textContent = '#' + orderId;
+                document.getElementById('finalTotal').textContent = '₮' + total.toLocaleString();
+                document.getElementById('finalPhone').textContent = order.phone;
+                document.getElementById('finalAddress').textContent = order.address;
+                
+                // Cart цэвэрлэх
+                cart = [];
+                localStorage.removeItem('veloral_cart');
+                updateCart();
+            } else {
+                alert('❌ Захиалга илгээхэд алдаа гарлаа. Дахин оролдоно уу.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Захиалга өгөх ✓';
+            }
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkoutModal').classList.remove('active');
+            document.getElementById('checkoutForm').style.display = 'block';
+            document.getElementById('successScreen').classList.remove('active');
+            document.body.style.overflow = '';
+            
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerAddress').value = '';
+            document.getElementById('customerNote').value = '';
+            
+            document.getElementById('submitOrderBtn').disabled = false;
+            document.getElementById('submitOrderBtn').innerHTML = 'Захиалга өгөх ✓';
+        }
+
+        function finishOrder() {
+            closeCheckout();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ==========================================
+        // 🔧 UTILITY FUNCTIONS
+        // ==========================================
+        function copyShopPhone() {
+            navigator.clipboard.writeText('+97694802514').then(() => {
+                const btn = event.target;
+                btn.textContent = '✓';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '📋';
+                    btn.classList.remove('copied');
+                }, 1500);
+            });
+        }
+
+        function openShopMap() {
+            const address = "Natur Shopping Center, Ulaanbaatar, Mongolia";
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank');
+        }
+
+        // ==========================================
+        // 🎯 EVENT LISTENERS
+        // ==========================================
+        window.onclick = (e) => {
+            if (e.target.classList.contains('checkout-modal')) {
+                if (!document.getElementById('successScreen').classList.contains('active')) {
+                    closeCheckout();
+                }
+            }
+        };
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
