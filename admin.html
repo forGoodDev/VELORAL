@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VELORAL | Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --crimson: #8B0000;
+            --deep-red: #1A0000;
+            --blood-red: #DC143C;
+            --gold: #D4AF37;
+            --gold-light: #F4E4C1;
+            --black: #050505;
+            --dark-gray: #0A0A0A;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--black);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--deep-red), var(--black));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--gold);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-box h1 {
+            color: var(--gold);
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .login-box p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 30px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--gold), #B8860B);
+            border: none;
+            border-radius: 10px;
+            color: var(--black);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .login-box button:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-error {
+            color: var(--blood-red);
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* Admin Panel */
+        .admin-container {
+            display: none;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .admin-header h2 {
+            color: var(--gold);
+            font-size: 1.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-danger {
+            background: var(--blood-red);
+            color: #fff;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(212, 175, 55, 0.4);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 15px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
+        }
+
+        .tab-btn:hover {
+            color: var(--gold);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Orders Table */
+        .orders-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .orders-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .orders-header h3 {
+            color: var(--gold);
+        }
+
+        .refresh-btn {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-btn:hover {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        .refresh-btn.spinning {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .orders-table {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #F59E0B;
+        }
+
+        .status-processing {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60A5FA;
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10B981;
+        }
+
+        .status-cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #EF4444;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .action-btn.complete {
+            background: #10B981;
+            color: #fff;
+        }
+
+        .action-btn.process {
+            background: #3B82F6;
+            color: #fff;
+        }
+
+        .action-btn.cancel {
+            background: #EF4444;
+            color: #fff;
+        }
+
+        .action-btn:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        /* Products Section */
+        .add-product-form {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .add-product-form h3 {
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: var(--gold);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview span {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            height: 180px;
+            position: relative;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-price-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--blood-red);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .product-info {
+            padding: 15px;
+        }
+
+        .product-info h4 {
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .product-category {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-bottom: 10px;
+        }
+
+        .category-men {
+            background: rgba(74, 144, 226, 0.2);
+            color: #4A90E2;
+        }
+
+        .category-women {
+            background: rgba(226, 74, 144, 0.2);
+            color: #E24A90;
+        }
+
+        .delete-product-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--blood-red);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .delete-product-btn:hover {
+            background: #ff1a1a;
+        }
+
+        /* Sync Status */
+        .sync-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 1px solid var(--gold);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .sync-dot.syncing {
+            background: #F59E0B;
+            animation: spin 1s linear infinite;
+        }
+
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h1>🔐 VELORAL</h1>
+            <p>Админ Панел</p>
+            <input type="password" id="adminPassword" placeholder="••••••" maxlength="6">
+            <button onclick="login()">Нэвтрэх</button>
+            <p class="login-error" id="loginError">Буруу нууц үг!</p>
+            <p style="margin-top: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.4);">
+                <a href="index.html" style="color: var(--gold);">← Дэлгүүр рүү буцах</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-container" id="adminPanel">
+        <div class="admin-header">
+            <div>
+                <h2>📊 Админ Самбар</h2>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">VELORAL Online Shop</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="refreshData()">🔄 Шинэчлэх</button>
+                <button class="btn btn-danger" onclick="logout()">Гарах</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-label">Нийт захиалга</div>
+                <div class="stat-value" id="totalOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-label">Нийт орлого</div>
+                <div class="stat-value" id="totalRevenue">₮0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-label">Хүлээгдэж буй</div>
+                <div class="stat-value" id="pendingOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🛍️</div>
+                <div class="stat-label">Барааны тоо</div>
+                <div class="stat-value" id="totalProducts">0</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('orders')">📋 Захиалгууд</button>
+            <button class="tab-btn" onclick="showTab('products')">📦 Бараанууд</button>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="ordersTab" class="tab-content active">
+            <div class="orders-container">
+                <div class="orders-header">
+                    <h3>Сүүлийн захиалгууд</h3>
+                    <button class="refresh-btn" id="refreshOrdersBtn" onclick="loadOrders()">
+                        <span>🔄</span>
+                        <span>Шинэчлэх</span>
+                    </button>
+                </div>
+                <div class="orders-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Захиалга #</th>
+                                <th>Огноо</th>
+                                <th>Хэрэглэгч</th>
+                                <th>Утас</th>
+                                <th>Бараанууд</th>
+                                <th>Нийт</th>
+                                <th>Статус</th>
+                                <th>Үйлдэл</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <!-- Orders render here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="productsTab" class="tab-content">
+            <div class="add-product-form">
+                <h3>➕ Шинэ бараа нэмэх</h3>
+                <div class="image-preview" id="imagePreview">
+                    <span>Зургийн URL оруулна уу</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Барааны нэр *</label>
+                        <input type="text" id="newProductName" placeholder="Rolex Submariner">
+                    </div>
+                    <div class="form-group">
+                        <label>Үнэ (₮) *</label>
+                        <input type="number" id="newProductPrice" placeholder="45000000">
+                    </div>
+                    <div class="form-group">
+                        <label>Зургийн URL *</label>
+                        <input type="url" id="newProductImage" placeholder="https://..." onchange="previewImage(this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Ангилал *</label>
+                        <select id="newProductCategory">
+                            <option value="men">👨 Эрэгтэй</option>
+                            <option value="women">👩 Эмэгтэй</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Тайлбар</label>
+                    <textarea id="newProductDesc" rows="2" placeholder="Барааны тайлбар..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="addProduct()" style="width: 100%;">
+                    Бараа нэмэх
+                </button>
+            </div>
+
+            <h3 style="color: var(--gold); margin-bottom: 20px;">📋 Барааны жагсаалт</h3>
+            <div class="products-grid" id="productsGrid">
+                <!-- Products render here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync Status Bar -->
+    <div class="sync-bar" id="syncBar" style="display: none;">
+        <div class="sync-indicator">
+            <div class="sync-dot" id="syncDot"></div>
+            <span id="syncText">Холбогдсон</span>
+        </div>
+        <span id="lastSync">Сүүлийн шинэчлэл: -</span>
+    </div>
+
+    <script>
+        // ⚠️ ЭНД ӨӨРИЙН GOOGLE APPS SCRIPT URL-г ОРУУЛНА УУ!
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzTCfDLZUl-WqtdIm4LXeOSSAhu8viAJEs9OUndxaZxoLsX1nyjEnQr6TO2Xingb9a1Dw/exec';
+        const ADMIN_PASSWORD = '0624';
+
+        let orders = [];
+        let products = [];
+        let autoRefreshInterval;
+
+        // Login
+        function login() {
+            const input = document.getElementById('adminPassword').value;
+            if (input === ADMIN_PASSWORD) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                document.getElementById('syncBar').style.display = 'flex';
+                initDashboard();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        // Initialize Dashboard
+        async function initDashboard() {
+            await Promise.all([loadOrders(), loadProducts()]);
+            startAutoRefresh();
+        }
+
+        // Load Orders
+        async function loadOrders() {
+            updateSyncStatus('syncing', 'Захиалга татаж байна...');
+            
+            const btn = document.getElementById('refreshOrdersBtn');
+            btn.classList.add('spinning');
+            
+            try {
+                const response = await fetch(`${API_URL}?action=getOrders&password=${ADMIN_PASSWORD}&t=${Date.now()}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    orders = data.orders || [];
+                    renderOrders();
+                    updateStats();
+                    updateSyncStatus('online', 'Холбогдсон');
+                }
+            } catch (error) {
+                console.error('Захиалга татахад алдаа:', error);
+                updateSyncStatus('offline', 'Алдаа гарлаа');
+            } finally {
+                btn.classList.remove('spinning');
+            }
+        }
+
+        // Load Products
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_URL}?action=getProducts&t=${Date.now()}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    products = data.products || [];
+                    renderProducts();
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Бараа татахад алдаа:', error);
+            }
+        }
+
+        // Render Orders
+        function renderOrders() {
+            const tbody = document.getElementById('ordersTableBody');
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">Захиалга олдсонгүй</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td><strong>${order.order_id}</strong></td>
+                    <td>${new Date(order.created_at).toLocaleString('mn-MN')}</td>
+                    <td>${order.customer_name}</td>
+                    <td><a href="tel:${order.phone}" style="color: var(--gold);">${order.phone}</a></td>
+                    <td title="${order.items}">${order.items.length > 30 ? order.items.substring(0, 30) + '...' : order.items}</td>
+                    <td style="font-weight: 700; color: var(--gold);">₮${parseInt(order.total).toLocaleString()}</td>
+                    <td>
+                        <span class="status-badge status-${order.status}">
+                            ${getStatusText(order.status)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            ${order.status === 'pending' ? `
+                                <button class="action-btn process" onclick="updateStatus('${order.order_id}', 'processing')">📦</button>
+                                <button class="action-btn complete" onclick="updateStatus('${order.order_id}', 'completed')">✓</button>
+                                <button class="action-btn cancel" onclick="updateStatus('${order.order_id}', 'cancelled')">✕</button>
+                            ` : order.status === 'processing' ? `
+                                <button class="action-btn complete" onclick="updateStatus('${order.order_id}', 'completed')">✓</button>
+                                <button class="action-btn cancel" onclick="updateStatus('${order.order_id}', 'cancelled')">✕</button>
+                            ` : '<span style="color: #666; font-size: 0.8rem;">Хаагдсан</span>'}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'pending': '⏳ Хүлээгдэж буй',
+                'processing': '📦 Бэлтгэж байна',
+                'completed': '✅ Дууссан',
+                'cancelled': '❌ Цуцлагдсан'
+            };
+            return texts[status] || status;
+        }
+
+        // Render Products
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            
+            if (products.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5);">Бараа олдсонгүй</p>';
+                return;
+            }
+            
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <div class="product-image">
+                        <div class="product-price-tag">₮${parseInt(p.price).toLocaleString()}</div>
+                        <img src="${p.image}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/400x300/1a0000/d4af37?text=No+Image'">
+                    </div>
+                    <div class="product-info">
+                        <span class="product-category category-${p.category}">${p.category === 'men' ? '👨 Эрэгтэй' : '👩 Эмэгтэй'}</span>
+                        <h4>${p.name}</h4>
+                        <button class="delete-product-btn" onclick="deleteProduct(${p.id})">🗑️ Устгах</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update Stats
+        function updateStats() {
+            const totalRevenue = orders.reduce((sum, o) => sum + (parseInt(o.total) || 0), 0);
+            const pending = orders.filter(o => o.status === 'pending').length;
+            
+            document.getElementById('totalOrders').textContent = orders.length;
+            document.getElementById('totalRevenue').textContent = '₮' + totalRevenue.toLocaleString();
+            document.getElementById('pendingOrders').textContent = pending;
+            document.getElementById('totalProducts').textContent = products.length;
+        }
+
+        // Update Order Status
+        async function updateStatus(orderId, status) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'updateOrderStatus',
+                        orderId: orderId,
+                        status: status,
+                        password: ADMIN_PASSWORD
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    loadOrders();
+                }
+            } catch (error) {
+                alert('Алдаа гарлаа: ' + error.message);
+            }
+        }
+
+        // Add Product
+        async function addProduct() {
+            const name = document.getElementById('newProductName').value.trim();
+            const price = parseInt(document.getElementById('newProductPrice').value);
+            const image = document.getElementById('newProductImage').value.trim();
+            const category = document.getElementById('newProductCategory').value;
+            const description = document.getElementById('newProductDesc').value.trim();
+            
+            if (!name || !price || !image) {
+                alert('Бүх талбарыг бөглөнө үү!');
+                return;
+            }
+            
+            const product = {
+                id: Date.now(),
+                name,
+                price,
+                image,
+                category,
+                description
+            };
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'addProduct',
+                        product: product,
+                        password: ADMIN_PASSWORD
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    // Clear form
+                    document.getElementById('newProductName').value = '';
+                    document.getElementById('newProductPrice').value = '';
+                    document.getElementById('newProductImage').value = '';
+                    document.getElementById('newProductDesc').value = '';
+                    document.getElementById('imagePreview').innerHTML = '<span>Зургийн URL оруулна уу</span>';
+                    
+                    loadProducts();
+                    alert('✅ Бараа амжилттай нэмэгдлээ!');
+                }
+            } catch (error) {
+                alert('Алдаа гарлаа: ' + error.message);
+            }
+        }
+
+        // Delete Product
+        async function deleteProduct(productId) {
+            if (!confirm('Энэ барааг устгах уу?')) return;
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'deleteProduct',
+                        productId: productId,
+                        password: ADMIN_PASSWORD
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    loadProducts();
+                }
+            } catch (error) {
+                alert('Алдаа гарлаа: ' + error.message);
+            }
+        }
+
+        // Preview Image
+        function previewImage(url) {
+            const preview = document.getElementById('imagePreview');
+            if (url) {
+                preview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='<span style=\\'color:var(--blood-red)\\'>Зураг олдсонгүй</span>'">`;
+            }
+        }
+
+        // Tab Switching
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        // Sync Status
+        function updateSyncStatus(status, text) {
+            const dot = document.getElementById('syncDot');
+            const syncText = document.getElementById('syncText');
+            
+            if (status === 'syncing') {
+                dot.classList.add('syncing');
+            } else {
+                dot.classList.remove('syncing');
+            }
+            
+            syncText.textContent = text;
+            document.getElementById('lastSync').textContent = 'Сүүлийн шинэчлэл: ' + new Date().toLocaleTimeString('mn-MN');
+        }
+
+        // Auto Refresh
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => {
+                loadOrders();
+                loadProducts();
+            }, 10000); // 10 секунд тутам
+        }
+
+        function refreshData() {
+            loadOrders();
+            loadProducts();
+        }
+
+        // Enter key login
+        document.getElementById('adminPassword')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+    </script>
+</body>
+</html>
